@@ -267,10 +267,21 @@
         .dinamico-pago {
             display: none;
             background-color: #f8f9fa;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             border-left: 4px solid var(--brand-color);
             margin-bottom: 15px;
+        }
+
+        .alerta-seña {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         .btn-enviar-wa {
@@ -428,7 +439,7 @@
                     <p id="total-html">$0</p>
                 </div>
                 <div id="seña-info" class="info-nota" style="display: none;">
-                    Seña requerida (50%): <strong id="seña-html">$0</strong>
+                    Seña del 50% por transferencia: <strong id="seña-html" style="color: var(--pizza-red); font-size: 1.1rem;">$0</strong>
                 </div>
             </div>
 
@@ -452,17 +463,22 @@
                     </select>
                 </div>
 
+                <!-- CAMPO DINÁMICO: EFECTIVO (Ahora incluye la advertencia de transferencia de seña) -->
                 <div id="campo-efectivo" class="dinamico-pago">
+                    <div class="alerta-seña">
+                        ⚠️ <strong>Seña Obligatoria:</strong> Para confirmar este pedido en efectivo, es necesario transferir primero el <strong>50% del total</strong> como seña y enviar el comprobante.
+                    </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label for="cliente-paga-con">¿Con cuánto pagás? *</label>
-                        <input type="number" id="cliente-paga-con" placeholder="Ej: 10000" min="0">
-                        <span class="info-nota" style="display:block; margin-top:5px;">Debe ser igual o mayor al total del pedido.</span>
+                        <label for="cliente-paga-con">¿Con cuánto pagás el resto al recibir? *</label>
+                        <input type="number" id="cliente-paga-con" placeholder="Ej: 5000" min="0">
+                        <span class="info-nota" style="display:block; margin-top:5px;">Ingresá el billete con el que vas a abonar el saldo presencial.</span>
                     </div>
                 </div>
 
+                <!-- CAMPO DINÁMICO: TRANSFERENCIA COMPLETA -->
                 <div id="campo-transferencia" class="dinamico-pago">
                     <p style="font-size: 0.95rem; color: #333; line-height: 1.4;">
-                        ⚠️ <strong style="color: var(--pizza-red);">Atención:</strong> Al enviar el pedido por WhatsApp se te solicitará adjuntar de forma obligatoria el <strong>comprobante de transferencia</strong>.
+                        📸 Al enviar el pedido por WhatsApp acordate de adjuntar el <strong>comprobante de transferencia del total</strong>.
                     </p>
                 </div>
 
@@ -475,7 +491,6 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN: Reemplazá este número por el del comercio real
         const TELEFONO_LOCAL = "5491130869436"; 
 
         let carrito = {};
@@ -521,7 +536,6 @@
             }
             document.getElementById('total-html').innerText = `$${totalPedido.toLocaleString('es-AR')}`;
             
-            // Actualizar el cálculo visual de la seña si aplica
             actualizarSeñaVisual();
         }
 
@@ -540,7 +554,7 @@
                 campoEfectivo.style.display = "none";
                 campoTransferencia.style.display = "block";
                 inputPagaCon.required = false;
-                inputPagaCon.value = ""; // Limpiar por si acaso
+                inputPagaCon.value = "";
             } else {
                 campoEfectivo.style.display = "none";
                 campoTransferencia.style.display = "none";
@@ -567,11 +581,8 @@
         // --- SISTEMA DE FILTROS Y BUSCADOR ---
         function filtrarCategoria(categoria, boton) {
             categoriaActual = categoria;
-            
-            // Cambiar clase activa en los botones
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             boton.classList.add('active');
-            
             ejecutarFiltroCombinado();
         }
 
@@ -600,44 +611,42 @@
 
         // --- PROCESAMIENTO SEGURO DEL PEDIDO ---
         function enviarPedidoWhatsApp(event) {
-            event.preventDefault(); // Detiene el envío clásico del formulario
+            event.preventDefault();
 
-            // 1. Validar que tenga cargado algo en el carrito
             if (Object.keys(carrito).length === 0) {
                 alert("Tu carrito está vacío. Sumá al menos un producto antes de enviar.");
                 return;
             }
 
-            // 2. Extraer y sanitizar los datos personales del formulario
             const nombreCliente = document.getElementById('cliente-nombre').value.trim();
             const direccionCliente = document.getElementById('cliente-direccion').value.trim();
             const metodoPago = document.getElementById('cliente-pago').value;
 
             let detallesPagoMensaje = "";
+            const señaRequerida = totalPedido * 0.5;
 
-            // Validación específica según método de pago
             if (metodoPago === "Efectivo") {
                 const pagaCon = parseInt(document.getElementById('cliente-paga-con').value);
                 
-                if (isNaN(pagaCon) || pagaCon < totalPedido) {
-                    alert(`El monto con el que pagás ($${pagaCon || 0}) debe ser igual o mayor al total del pedido ($${totalPedido}).`);
+                // El monto para pagar en el lugar tiene que ser coherente con el saldo restante (el otro 50%)
+                if (isNaN(pagaCon) || pagaCon < señaRequerida) {
+                    alert(`El monto con el que pagás el resto ($${pagaCon || 0}) debe ser igual o mayor al saldo restante en efectivo ($${señaRequerida}).`);
                     return;
                 }
 
-                const señaRequerida = totalPedido * 0.5;
-                const vuelto = pagaCon - totalPedido;
+                const vuelto = pagaCon - señaRequerida;
 
-                detallesPagoMensaje += `💵 *Método:* Efectivo (Paga al recibir)\n`;
-                detallesPagoMensaje += `📌 *Seña del 50% Requerida:* $${señaRequerida.toLocaleString('es-AR')}\n`;
-                detallesPagoMensaje += `💰 *Paga con:* $${pagaCon.toLocaleString('es-AR')}\n`;
-                detallesPagoMensaje += `🪙 *Vuelto:* $${vuelto.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `💵 *Método:* Efectivo (Abonando saldo al recibir)\n`;
+                detallesPagoMensaje += `💰 *Seña del 50% (Transferencia):* $${señaRequerida.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `🤝 *Saldo a pagar en Entrega:* $${señaRequerida.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `💵 *Paga en entrega con:* $${pagaCon.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `🪙 *Vuelto en entrega:* $${vuelto.toLocaleString('es-AR')}\n`;
 
             } else if (metodoPago === "Transferencia") {
-                detallesPagoMensaje += `💳 *Método:* Transferencia / Mercado Pago\n`;
-                detallesPagoMensaje += `📎 *Nota:* Adjunto el comprobante de pago a continuación.\n`;
+                detallesPagoMensaje += `💳 *Método:* Transferencia (Total del pedido)\n`;
+                detallesPagoMensaje += `📎 *Nota:* Adjunto el comprobante del total de la compra.\n`;
             }
 
-            // 3. Construir la estructura limpia y ordenada del mensaje
             let mensaje = `🍔 *NUEVO PEDIDO - BURGER & CO.* 🍔\n\n`;
             mensaje += `👤 *Cliente:* ${nombreCliente}\n`;
             mensaje += `📍 *Dirección:* ${direccionCliente}\n`;
@@ -651,15 +660,13 @@
 
             mensaje += `\n💰 *TOTAL DEL PEDIDO: $${totalPedido.toLocaleString('es-AR')}*`;
 
-            // En caso de transferencia, se agrega un recordatorio final en el texto de WhatsApp
-            if (metodoPago === "Transferencia") {
-                mensaje += `\n\n📸 _¡Hola! Ahí te mando el comprobante de la transferencia junto con el pedido._`;
+            if (metodoPago === "Efectivo") {
+                mensaje += `\n\n📸 _¡Hola! Acá te dejo el pedido. Adjunto el comprobante de transferencia por el 50% de la seña ($${señaRequerida.toLocaleString('es-AR')})._`;
+            } else if (metodoPago === "Transferencia") {
+                mensaje += `\n\n📸 _¡Hola! Ahí te mando el comprobante de la transferencia del total del pedido._`;
             }
 
-            // 4. Codificación URL segura de la cadena de texto
             const mensajeUrl = encodeURIComponent(mensaje);
-
-            // 5. Redirección final controlada
             window.open(`https://wa.me/${TELEFONO_LOCAL}?text=${mensajeUrl}`, '_blank', 'noopener,noreferrer');
         }
     </script>
