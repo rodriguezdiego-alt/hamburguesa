@@ -89,11 +89,11 @@
             overflow-x: auto;
             padding-bottom: 10px;
             margin-bottom: 20px;
-            scrollbar-width: none; /* Oculta barra en Firefox */
+            scrollbar-width: none;
         }
 
         .categories-tabs::-webkit-scrollbar {
-            display: none; /* Oculta barra en Chrome/Safari */
+            display: none;
         }
 
         .tab-btn {
@@ -263,7 +263,6 @@
             border-color: var(--brand-color);
         }
 
-        /* Bloques dinámicos ocultos por defecto */
         .dinamico-pago {
             display: none;
             background-color: #f8f9fa;
@@ -397,7 +396,7 @@
             </div>
 
             <div class="pizza-card" data-categoria="empanadas" data-nombre="Docena de Carne" data-precio="9000">
-                <img src="imagenes/empanada-carne.jpg" alt="Empanadas" class="pizza-img">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanadas" class="pizza-img">
                 <div class="pizza-info">
                     <div class="pizza-nombre">Docena Empanadas de Carne</div>
                     <div class="pizza-desc">Carne cortada a cuchillo, fritas o al horno, jugosas y bien norteñas.</div>
@@ -435,8 +434,11 @@
             
             <div class="total-box">
                 <div class="total-row">
-                    <span>Total acumulado:</span>
+                    <span>Total de la compra:</span>
                     <p id="total-html">$0</p>
+                </div>
+                <div id="envio-info" class="info-nota" style="display: none; margin-bottom: 5px;">
+                    🛵 Costo de envío incluido: <strong>$2.000</strong>
                 </div>
                 <div id="seña-info" class="info-nota" style="display: none;">
                     Seña del 50% por transferencia: <strong id="seña-html" style="color: var(--pizza-red); font-size: 1.1rem;">$0</strong>
@@ -449,7 +451,16 @@
                     <input type="text" id="cliente-nombre" placeholder="Ej: Juan Pérez" required>
                 </div>
 
+                <!-- NUEVA CASILLA: MÉTODO DE ENTREGA -->
                 <div class="form-group">
+                    <label for="cliente-entrega">Método de Entrega *</label>
+                    <select id="cliente-entrega" onchange="alternarEntrega()" required>
+                        <option value="Delivery" selected>🛵 Envío a domicilio (+$2.000)</option>
+                        <option value="Retiro">🛍️ Buscar en el local ($0)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="grupo-direccion">
                     <label for="cliente-direccion">Dirección de Entrega *</label>
                     <input type="text" id="cliente-direccion" placeholder="Calle, número y departamento" required>
                 </div>
@@ -463,7 +474,7 @@
                     </select>
                 </div>
 
-                <!-- CAMPO DINÁMICO: EFECTIVO (Ahora incluye la advertencia de transferencia de seña) -->
+                <!-- CAMPO DINÁMICO: EFECTIVO -->
                 <div id="campo-efectivo" class="dinamico-pago">
                     <div class="alerta-seña">
                         ⚠️ <strong>Seña Obligatoria:</strong> Para confirmar este pedido en efectivo, es necesario transferir primero el <strong>50% del total</strong> como seña y enviar el comprobante.
@@ -492,10 +503,12 @@
 
     <script>
         const TELEFONO_LOCAL = "5491130869436"; 
+        const COSTO_ENVIO = 2000;
 
         let carrito = {};
         let categoriaActual = 'todos';
-        let totalPedido = 0;
+        let totalProductos = 0;
+        let totalFinal = 0;
 
         // --- SISTEMA DE CARRITO ---
         function sumar(btn) {
@@ -530,13 +543,42 @@
         }
 
         function calcularTotal() {
-            totalPedido = 0;
+            totalProductos = 0;
             for (const nombre in carrito) {
-                totalPedido += carrito[nombre].precio * carrito[nombre].cantidad;
+                totalProductos += carrito[nombre].precio * carrito[nombre].cantidad;
             }
-            document.getElementById('total-html').innerText = `$${totalPedido.toLocaleString('es-AR')}`;
-            
+
+            const metodoEntrega = document.getElementById('cliente-entrega').value;
+            const envioInfoBox = document.getElementById('envio-info');
+
+            if (metodoEntrega === "Delivery" && totalProductos > 0) {
+                totalFinal = totalProductos + COSTO_ENVIO;
+                envioInfoBox.style.display = "block";
+            } else {
+                totalFinal = totalProductos;
+                envioInfoBox.style.display = "none";
+            }
+
+            document.getElementById('total-html').innerText = `$${totalFinal.toLocaleString('es-AR')}`;
             actualizarSeñaVisual();
+        }
+
+        // --- GESTIÓN DINÁMICA DE ENTREGA ---
+        function alternarEntrega() {
+            const metodoEntrega = document.getElementById('cliente-entrega').value;
+            const grupoDireccion = document.getElementById('grupo-direccion');
+            const inputDireccion = document.getElementById('cliente-direccion');
+
+            if (metodoEntrega === "Retiro") {
+                grupoDireccion.style.display = "none";
+                inputDireccion.required = false;
+                inputDireccion.value = "";
+            } else {
+                grupoDireccion.style.display = "block";
+                inputDireccion.required = true;
+            }
+
+            calcularTotal();
         }
 
         // --- GESTIÓN DINÁMICA DE CAMPOS DE PAGO ---
@@ -569,8 +611,8 @@
             const señaBox = document.getElementById('seña-info');
             const señaHtml = document.getElementById('seña-html');
 
-            if (metodo === "Efectivo" && totalPedido > 0) {
-                const seña = totalPedido * 0.5;
+            if (metodo === "Efectivo" && totalFinal > 0) {
+                const seña = totalFinal * 0.5;
                 señaHtml.innerText = `$${seña.toLocaleString('es-AR')}`;
                 señaBox.style.display = "block";
             } else {
@@ -609,7 +651,7 @@
             });
         }
 
-        // --- PROCESAMIENTO SEGURO DEL PEDIDO ---
+        // --- PROCESAMIENTO SEGURO DEL PEDIDO Y MENSAJE ---
         function enviarPedidoWhatsApp(event) {
             event.preventDefault();
 
@@ -619,37 +661,49 @@
             }
 
             const nombreCliente = document.getElementById('cliente-nombre').value.trim();
+            const metodoEntrega = document.getElementById('cliente-entrega').value;
             const direccionCliente = document.getElementById('cliente-direccion').value.trim();
             const metodoPago = document.getElementById('cliente-pago').value;
 
             let detallesPagoMensaje = "";
-            const señaRequerida = totalPedido * 0.5;
+            const señaRequerida = totalFinal * 0.5;
+            const restoAPagar = totalFinal - señaRequerida;
 
             if (metodoPago === "Efectivo") {
                 const pagaCon = parseInt(document.getElementById('cliente-paga-con').value);
                 
-                // El monto para pagar en el lugar tiene que ser coherente con el saldo restante (el otro 50%)
-                if (isNaN(pagaCon) || pagaCon < señaRequerida) {
-                    alert(`El monto con el que pagás el resto ($${pagaCon || 0}) debe ser igual o mayor al saldo restante en efectivo ($${señaRequerida}).`);
+                if (isNaN(pagaCon) || pagaCon < restoAPagar) {
+                    alert(`El monto con el que pagás el resto ($${pagaCon || 0}) debe ser igual o mayor al saldo que debés entregar en mano ($${restoAPagar}).`);
                     return;
                 }
 
-                const vuelto = pagaCon - señaRequerida;
+                const vuelto = pagaCon - restoAPagar;
 
-                detallesPagoMensaje += `💵 *Método:* Efectivo (Abonando saldo al recibir)\n`;
-                detallesPagoMensaje += `💰 *Seña del 50% (Transferencia):* $${señaRequerida.toLocaleString('es-AR')}\n`;
-                detallesPagoMensaje += `🤝 *Saldo a pagar en Entrega:* $${señaRequerida.toLocaleString('es-AR')}\n`;
-                detallesPagoMensaje += `💵 *Paga en entrega con:* $${pagaCon.toLocaleString('es-AR')}\n`;
-                detallesPagoMensaje += `🪙 *Vuelto en entrega:* $${vuelto.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `💵 *Método:* Efectivo (Con seña previa)\n`;
+                detallesPagoMensaje += `💰 *TOTAL COMPRA:* $${totalFinal.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `🏦 *Seña 50% (Por Transferencia):* $${señaRequerida.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `🤝 *Resto a pagar en la entrega:* $${restoAPagar.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `💵 *Paga en mano con:* $${pagaCon.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `🪙 *VUELTO EXACTO:* $${vuelto.toLocaleString('es-AR')}\n`;
 
             } else if (metodoPago === "Transferencia") {
                 detallesPagoMensaje += `💳 *Método:* Transferencia (Total del pedido)\n`;
+                detallesPagoMensaje += `💰 *TOTAL COMPRA:* $${totalFinal.toLocaleString('es-AR')}\n`;
                 detallesPagoMensaje += `📎 *Nota:* Adjunto el comprobante del total de la compra.\n`;
             }
 
-            let mensaje = `🍔 *NUEVO PEDIDO - BURGER & CO.* 🍔\n\n`;
+            let mensaje = `🍔 *NUEVO PEDIDO - BURGER & Co.* 🍔\n\n`;
             mensaje += `👤 *Cliente:* ${nombreCliente}\n`;
-            mensaje += `📍 *Dirección:* ${direccionCliente}\n`;
+            
+            if (metodoEntrega === "Delivery") {
+                mensaje += `🛵 *Tipo de Entrega:* Envío a domicilio\n`;
+                mensaje += `📍 *Dirección:* ${direccionCliente}\n`;
+                mensaje += `📦 *Costo de Envío:* $${COSTO_ENVIO.toLocaleString('es-AR')}\n\n`;
+            } else {
+                mensaje += `🛍️ *Tipo de Entrega:* Retiro en el local\n\n`;
+            }
+            
+            mensaje += `⚙️ *INFORMACIÓN DE PAGO:*\n`;
             mensaje += detallesPagoMensaje + `\n`;
             mensaje += `🛒 *Detalle del Pedido:*\n`;
 
@@ -658,12 +712,10 @@
                 mensaje += `• ${carrito[nombre].cantidad}x ${nombre} ($${subtotal.toLocaleString('es-AR')})\n`;
             }
 
-            mensaje += `\n💰 *TOTAL DEL PEDIDO: $${totalPedido.toLocaleString('es-AR')}*`;
-
             if (metodoPago === "Efectivo") {
-                mensaje += `\n\n📸 _¡Hola! Acá te dejo el pedido. Adjunto el comprobante de transferencia por el 50% de la seña ($${señaRequerida.toLocaleString('es-AR')})._`;
+                mensaje += `\n📸 _¡Hola! Adjunto acá abajo el comprobante de transferencia por la seña de $${señaRequerida.toLocaleString('es-AR')}_`;
             } else if (metodoPago === "Transferencia") {
-                mensaje += `\n\n📸 _¡Hola! Ahí te mando el comprobante de la transferencia del total del pedido._`;
+                mensaje += `\n📸 _¡Hola! Ahí te mando el comprobante de la transferencia del total._`;
             }
 
             const mensajeUrl = encodeURIComponent(mensaje);
