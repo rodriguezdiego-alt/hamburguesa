@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burger & Co. - Pedidos en Línea</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --bg-color: #f4f4f6;
+            --brand-color: #ff9f1c; /* Naranja/Dorado de hamburguesería */
+            --brand-dark: #2ec4b6;  /* Color secundario */
+            --text-dark: #011627;
+            --card-bg: #ffffff;
+            --pizza-red: #e71d36;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            padding-bottom: 30px;
+        }
+
+        header {
+            background-color: var(--text-dark);
+            color: white;
+            text-align: center;
+            padding: 30px 15px;
+            border-bottom: 5px solid var(--brand-color);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .main-container {
+            padding: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* --- BUSCADOR Y CATEGORÍAS --- */
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--brand-color);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
+
+        .categories-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            scrollbar-width: none; /* Oculta barra en Firefox */
+        }
+
+        .categories-tabs::-webkit-scrollbar {
+            display: none; /* Oculta barra en Chrome/Safari */
+        }
+
+        .tab-btn {
+            background-color: #e0e0e4;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background-color: var(--brand-color);
+            color: white;
+        }
+
+        /* --- PRODUCTOS --- */
+        .pizza-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .pizza-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background-color: #ccc;
+        }
+
+        .pizza-info {
+            padding: 15px;
+        }
+
+        .pizza-nombre {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .pizza-desc {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .pizza-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pizza-precio {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e71d36;
+        }
+
+        .contador {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-cant {
+            background-color: #eee;
+            border: 1px solid #ddd;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-cant:active {
+            background-color: #ddd;
+        }
+
+        .cantidad-num {
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* --- SECCIÓN RESUMEN Y FORMULARIO --- */
+        .checkout-section {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .checkout-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--brand-color);
+            padding-bottom: 5px;
+        }
+
+        .total-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: #fff9f0;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed var(--brand-color);
+        }
+
+        .total-box p {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #e71d36;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #444;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--brand-color);
+        }
+
+        .btn-enviar-wa {
+            background-color: #25D366;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 30px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            width: 100%;
+            margin-top: 15px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-enviar-wa:active {
+            background-color: #1ebd59;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🍔 BURGER & CO.</h1>
+        <p>Elegí tus productos, completá tus datos y pedí por WhatsApp</p>
+    </header>
+
+    <div class="main-container">
+
+        <div class="search-box">
+            <input type="text" id="buscador" placeholder="¿Qué te gustaría comer hoy?..." onkeyup="filtrarProductos()">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+
+        <div class="categories-tabs">
+            <button class="tab-btn active" onclick="filtrarCategoria('todos', this)">✨ Todos</button>
+            <button class="tab-btn" onclick="filtrarCategoria('hamburguesas', this)">🍔 Hamburguesas</button>
+            <button class="tab-btn" onclick="filtrarCategoria('pizzas', this)">🍕 Pizzas</button>
+            <button class="tab-btn" onclick="filtrarCategoria('empanadas', this)">🥟 Empanadas</button>
+            <button class="tab-btn" onclick="filtrarCategoria('bebidas', this)">🥤 Bebidas</button>
+        </div>
+
+        <div id="contenedor-productos">
+
+            <div class="pizza-card" data-categoria="hamburguesas" data-nombre="Clásica Cheddar" data-precio="6500">
+                <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" alt="Hamburguesa Cheddar" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Clásica Cheddar</div>
+                    <div class="pizza-desc">Medallón de carne vacuna seleccionada de 150g, doble queso cheddar derretido, aderezo de la casa y pan de papa súper suave.</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$6.500</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="hamburguesas" data-nombre="Monster Bacon" data-precio="7800">
+                <img src="https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=500" alt="Hamburguesa Bacon" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Monster Bacon</div>
+                    <div class="pizza-desc">Doble medallón de carne (300g totales), triple cheddar, toneladas de panceta crocante ahumada y salsa barbacoa original.</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$7.800</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="hamburguesas" data-nombre="Crispy Onion Veggie" data-precio="7000">
+                <img src="https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?w=500" alt="Hamburguesa Veggie" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Crispy Onion Veggie</div>
+                    <div class="pizza-desc">Medallón a base de legumbres y hongos bien sazonados, queso tybo, cebolla crujiente frita, lechuga, tomate y mayonesa alioli.</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$7.000</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="pizzas" data-nombre="Muzzarella" data-precio="8500">
+                <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500" alt="Pizza Muzzarella" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Muzzarella Especial</div>
+                    <div class="pizza-desc">Salsa artesanal, doble muzzarella, aceitunas y orégano.</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$8.500</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="empanadas" data-nombre="Docena de Carne" data-precio="9000">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanadas" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Docena Empanadas de Carne</div>
+                    <div class="pizza-desc">Carne cortada a cuchillo, fritas o al horno, jugosas y bien norteñas.</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$9.000</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="bebidas" data-nombre="Gaseosa 1.5L" data-precio="2500">
+                <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500" alt="Gaseosa" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Gaseosa Línea Coca-Cola</div>
+                    <div class="pizza-desc">Botella de 1.5 Litros, bien fría.</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$2.500</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="checkout-section">
+            <h2>Confirmar Pedido</h2>
+            
+            <div class="total-box">
+                <span>Total acumulado:</span>
+                <p id="total-html">$0</p>
+            </div>
+
+            <form id="form-pedido" onsubmit="enviarPedidoWhatsApp(event)">
+                <div class="form-group">
+                    <label for="cliente-nombre">Tu Nombre y Apellido *</label>
+                    <input type="text" id="cliente-nombre" placeholder="Ej: Juan Pérez" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cliente-direccion">Dirección de Entrega *</label>
+                    <input type="text" id="cliente-direccion" placeholder="Calle, número y departamento" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cliente-pago">Método de Pago *</label>
+                    <select id="cliente-pago" required>
+                        <option value="" disabled selected>Seleccioná una opción</option>
+                        <option value="Efectivo">Efectivo (Paga al recibir)</option>
+                        <option value="Transferencia">Transferencia Bancaria / Mercado Pago</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-enviar-wa">
+                    <i class="fab fa-whatsapp"></i> Enviar Pedido por WhatsApp
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIGURACIÓN: Reemplazá este número por el del comercio real
+        const TELEFONO_LOCAL = "5491100000000"; 
+
+        let carrito = {};
+        let categoriaActual = 'todos';
+
+        // --- SISTEMA DE CARRITO ---
+        function sumar(btn) {
+            const card = btn.closest('.pizza-card');
+            const nombre = card.getAttribute('data-nombre');
+            const precio = parseInt(card.getAttribute('data-precio'));
+            const cantElemento = card.querySelector('.cantidad-num');
+            
+            if (!carrito[nombre]) {
+                carrito[nombre] = { precio: precio, cantidad: 0 };
+            }
+            
+            carrito[nombre].cantidad++;
+            cantElemento.innerText = carrito[nombre].cantidad;
+            calcularTotal();
+        }
+
+        function restar(btn) {
+            const card = btn.closest('.pizza-card');
+            const nombre = card.getAttribute('data-nombre');
+            const cantElemento = card.querySelector('.cantidad-num');
+            
+            if (carrito[nombre] && carrito[nombre].cantidad > 0) {
+                carrito[nombre].cantidad--;
+                cantElemento.innerText = carrito[nombre].cantidad;
+                
+                if (carrito[nombre].cantidad === 0) {
+                    delete carrito[nombre];
+                }
+                calcularTotal();
+            }
+        }
+
+        function calcularTotal() {
+            let total = 0;
+            for (const nombre in carrito) {
+                total += carrito[nombre].precio * carrito[nombre].cantidad;
+            }
+            document.getElementById('total-html').innerText = `$${total.toLocaleString('es-AR')}`;
+        }
+
+        // --- SISTEMA DE FILTROS Y BUSCADOR ---
+        function filtrarCategoria(categoria, boton) {
+            categoriaActual = categoria;
+            
+            // Cambiar clase activa en los botones
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            boton.classList.add('active');
+            
+            ejecutarFiltroCombinado();
+        }
+
+        function filtrarProductos() {
+            ejecutarFiltroCombinado();
+        }
+
+        function ejecutarFiltroCombinado() {
+            const textoBusqueda = document.getElementById('buscador').value.toLowerCase();
+            const tarjetas = document.querySelectorAll('.pizza-card');
+
+            tarjetas.forEach(card => {
+                const categoriaCard = card.getAttribute('data-categoria');
+                const nombreCard = card.getAttribute('data-nombre').toLowerCase();
+                
+                const coincideCategoria = (categoriaActual === 'todos' || categoriaCard === categoriaActual);
+                const coincideBusqueda = nombreCard.includes(textoBusqueda);
+
+                if (coincideCategoria && coincideBusqueda) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        // --- PROCESAMIENTO SEGURO DEL PEDIDO ---
+        function enviarPedidoWhatsApp(event) {
+            event.preventDefault(); // Detiene el envío clásico del formulario
+
+            // 1. Validar que tenga cargado algo en el carrito
+            if (Object.keys(carrito).length === 0) {
+                alert("Tu carrito está vacío. Sumá al menos un producto antes de enviar.");
+                return;
+            }
+
+            // 2. Extraer y sanitizar los datos personales del formulario
+            const nombreCliente = document.getElementById('cliente-nombre').value.trim();
+            const direccionCliente = document.getElementById('cliente-direccion').value.trim();
+            const metodoPago = document.getElementById('cliente-pago').value;
+
+            // 3. Construir la estructura limpia y ordenada del mensaje
+            let mensaje = `🍔 *NUEVO PEDIDO - BURGER & CO.* 🍔\n\n`;
+            mensaje += `👤 *Cliente:* ${nombreCliente}\n`;
+            mensaje += `📍 *Dirección:* ${direccionCliente}\n`;
+            mensaje += `💳 *Pago:* ${metodoPago}\n\n`;
+            mensaje += `🛒 *Detalle del Pedido:*\n`;
+
+            let total = 0;
+            for (const nombre in carrito) {
+                let subtotal = carrito[nombre].precio * carrito[nombre].cantidad;
+                mensaje += `• ${carrito[nombre].cantidad}x ${nombre} ($${subtotal.toLocaleString('es-AR')})\n`;
+                total += subtotal;
+            }
+
+            mensaje += `\n💰 *TOTAL A PAGAR: $${total.toLocaleString('es-AR')}*`;
+
+            // 4. Codificación URL segura de la cadena de texto
+            const mensajeUrl = encodeURIComponent(mensaje);
+
+            // 5. Redirección final controlada
+            window.open(`https://wa.me/${TELEFONO_LOCAL}?text=${mensajeUrl}`, '_blank', 'noopener,noreferrer');
+        }
+    </script>
+</body>
+</html>
