@@ -211,8 +211,8 @@
 
         .total-box {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 5px;
             margin-bottom: 20px;
             background-color: #fff9f0;
             padding: 12px;
@@ -220,10 +220,22 @@
             border: 1px dashed var(--brand-color);
         }
 
-        .total-box p {
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-row p {
             font-size: 1.4rem;
             font-weight: bold;
             color: #e71d36;
+        }
+
+        .info-nota {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
         }
 
         .form-group {
@@ -249,6 +261,16 @@
 
         .form-group input:focus, .form-group select:focus {
             border-color: var(--brand-color);
+        }
+
+        /* Bloques dinámicos ocultos por defecto */
+        .dinamico-pago {
+            display: none;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--brand-color);
+            margin-bottom: 15px;
         }
 
         .btn-enviar-wa {
@@ -364,7 +386,7 @@
             </div>
 
             <div class="pizza-card" data-categoria="empanadas" data-nombre="Docena de Carne" data-precio="9000">
-                <img src="imagenes/empanada-carne.jpg" alt="Empanadas" class="pizza-img">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanadas" class="pizza-img">
                 <div class="pizza-info">
                     <div class="pizza-nombre">Docena Empanadas de Carne</div>
                     <div class="pizza-desc">Carne cortada a cuchillo, fritas o al horno, jugosas y bien norteñas.</div>
@@ -401,8 +423,13 @@
             <h2>Confirmar Pedido</h2>
             
             <div class="total-box">
-                <span>Total acumulado:</span>
-                <p id="total-html">$0</p>
+                <div class="total-row">
+                    <span>Total acumulado:</span>
+                    <p id="total-html">$0</p>
+                </div>
+                <div id="seña-info" class="info-nota" style="display: none;">
+                    Seña requerida (50%): <strong id="seña-html">$0</strong>
+                </div>
             </div>
 
             <form id="form-pedido" onsubmit="enviarPedidoWhatsApp(event)">
@@ -418,11 +445,25 @@
 
                 <div class="form-group">
                     <label for="cliente-pago">Método de Pago *</label>
-                    <select id="cliente-pago" required>
+                    <select id="cliente-pago" onchange="alternarCamposPago()" required>
                         <option value="" disabled selected>Seleccioná una opción</option>
                         <option value="Efectivo">Efectivo (Paga al recibir)</option>
                         <option value="Transferencia">Transferencia Bancaria / Mercado Pago</option>
                     </select>
+                </div>
+
+                <div id="campo-efectivo" class="dinamico-pago">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="cliente-paga-con">¿Con cuánto pagás? *</label>
+                        <input type="number" id="cliente-paga-con" placeholder="Ej: 10000" min="0">
+                        <span class="info-nota" style="display:block; margin-top:5px;">Debe ser igual o mayor al total del pedido.</span>
+                    </div>
+                </div>
+
+                <div id="campo-transferencia" class="dinamico-pago">
+                    <p style="font-size: 0.95rem; color: #333; line-height: 1.4;">
+                        ⚠️ <strong style="color: var(--pizza-red);">Atención:</strong> Al enviar el pedido por WhatsApp se te solicitará adjuntar de forma obligatoria el <strong>comprobante de transferencia</strong>.
+                    </p>
                 </div>
 
                 <button type="submit" class="btn-enviar-wa">
@@ -439,6 +480,7 @@
 
         let carrito = {};
         let categoriaActual = 'todos';
+        let totalPedido = 0;
 
         // --- SISTEMA DE CARRITO ---
         function sumar(btn) {
@@ -473,11 +515,53 @@
         }
 
         function calcularTotal() {
-            let total = 0;
+            totalPedido = 0;
             for (const nombre in carrito) {
-                total += carrito[nombre].precio * carrito[nombre].cantidad;
+                totalPedido += carrito[nombre].precio * carrito[nombre].cantidad;
             }
-            document.getElementById('total-html').innerText = `$${total.toLocaleString('es-AR')}`;
+            document.getElementById('total-html').innerText = `$${totalPedido.toLocaleString('es-AR')}`;
+            
+            // Actualizar el cálculo visual de la seña si aplica
+            actualizarSeñaVisual();
+        }
+
+        // --- GESTIÓN DINÁMICA DE CAMPOS DE PAGO ---
+        function alternarCamposPago() {
+            const metodo = document.getElementById('cliente-pago').value;
+            const campoEfectivo = document.getElementById('campo-efectivo');
+            const campoTransferencia = document.getElementById('campo-transferencia');
+            const inputPagaCon = document.getElementById('cliente-paga-con');
+
+            if (metodo === "Efectivo") {
+                campoEfectivo.style.display = "block";
+                campoTransferencia.style.display = "none";
+                inputPagaCon.required = true;
+            } else if (metodo === "Transferencia") {
+                campoEfectivo.style.display = "none";
+                campoTransferencia.style.display = "block";
+                inputPagaCon.required = false;
+                inputPagaCon.value = ""; // Limpiar por si acaso
+            } else {
+                campoEfectivo.style.display = "none";
+                campoTransferencia.style.display = "none";
+                inputPagaCon.required = false;
+            }
+            
+            actualizarSeñaVisual();
+        }
+
+        function actualizarSeñaVisual() {
+            const metodo = document.getElementById('cliente-pago').value;
+            const señaBox = document.getElementById('seña-info');
+            const señaHtml = document.getElementById('seña-html');
+
+            if (metodo === "Efectivo" && totalPedido > 0) {
+                const seña = totalPedido * 0.5;
+                señaHtml.innerText = `$${seña.toLocaleString('es-AR')}`;
+                señaBox.style.display = "block";
+            } else {
+                señaBox.style.display = "none";
+            }
         }
 
         // --- SISTEMA DE FILTROS Y BUSCADOR ---
@@ -529,21 +613,48 @@
             const direccionCliente = document.getElementById('cliente-direccion').value.trim();
             const metodoPago = document.getElementById('cliente-pago').value;
 
+            let detallesPagoMensaje = "";
+
+            // Validación específica según método de pago
+            if (metodoPago === "Efectivo") {
+                const pagaCon = parseInt(document.getElementById('cliente-paga-con').value);
+                
+                if (isNaN(pagaCon) || pagaCon < totalPedido) {
+                    alert(`El monto con el que pagás ($${pagaCon || 0}) debe ser igual o mayor al total del pedido ($${totalPedido}).`);
+                    return;
+                }
+
+                const señaRequerida = totalPedido * 0.5;
+                const vuelto = pagaCon - totalPedido;
+
+                detallesPagoMensaje += `💵 *Método:* Efectivo (Paga al recibir)\n`;
+                detallesPagoMensaje += `📌 *Seña del 50% Requerida:* $${señaRequerida.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `💰 *Paga con:* $${pagaCon.toLocaleString('es-AR')}\n`;
+                detallesPagoMensaje += `🪙 *Vuelto:* $${vuelto.toLocaleString('es-AR')}\n`;
+
+            } else if (metodoPago === "Transferencia") {
+                detallesPagoMensaje += `💳 *Método:* Transferencia / Mercado Pago\n`;
+                detallesPagoMensaje += `📎 *Nota:* Adjunto el comprobante de pago a continuación.\n`;
+            }
+
             // 3. Construir la estructura limpia y ordenada del mensaje
             let mensaje = `🍔 *NUEVO PEDIDO - BURGER & CO.* 🍔\n\n`;
             mensaje += `👤 *Cliente:* ${nombreCliente}\n`;
             mensaje += `📍 *Dirección:* ${direccionCliente}\n`;
-            mensaje += `💳 *Pago:* ${metodoPago}\n\n`;
+            mensaje += detallesPagoMensaje + `\n`;
             mensaje += `🛒 *Detalle del Pedido:*\n`;
 
-            let total = 0;
             for (const nombre in carrito) {
                 let subtotal = carrito[nombre].precio * carrito[nombre].cantidad;
                 mensaje += `• ${carrito[nombre].cantidad}x ${nombre} ($${subtotal.toLocaleString('es-AR')})\n`;
-                total += subtotal;
             }
 
-            mensaje += `\n💰 *TOTAL A PAGAR: $${total.toLocaleString('es-AR')}*`;
+            mensaje += `\n💰 *TOTAL DEL PEDIDO: $${totalPedido.toLocaleString('es-AR')}*`;
+
+            // En caso de transferencia, se agrega un recordatorio final en el texto de WhatsApp
+            if (metodoPago === "Transferencia") {
+                mensaje += `\n\n📸 _¡Hola! Ahí te mando el comprobante de la transferencia junto con el pedido._`;
+            }
 
             // 4. Codificación URL segura de la cadena de texto
             const mensajeUrl = encodeURIComponent(mensaje);
