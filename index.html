@@ -331,6 +331,7 @@
 
         <div id="contenedor-productos">
 
+            <!-- HAMBURGUESAS -->
             <div class="pizza-card" data-categoria="hamburguesas" data-nombre="Clásica Cheddar" data-precio="6500">
                 <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" alt="Hamburguesa Cheddar" class="pizza-img">
                 <div class="pizza-info">
@@ -379,6 +380,7 @@
                 </div>
             </div>
 
+            <!-- PIZZAS -->
             <div class="pizza-card" data-categoria="pizzas" data-nombre="Muzzarella" data-precio="8500">
                 <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500" alt="Pizza Muzzarella" class="pizza-img">
                 <div class="pizza-info">
@@ -395,13 +397,14 @@
                 </div>
             </div>
 
-            <div class="pizza-card" data-categoria="empanadas" data-nombre="Docena de Carne" data-precio="9000">
-               <img src="imagenes/empanada-carne.jpg" alt="Empanadas" class="pizza-img">
+            <!-- NUEVAS EMPANADAS DETALLADAS POR UNIDAD ($750 c/u) -->
+            <div class="pizza-card" data-categoria="empanadas" data-nombre="Empanada de Carne Cortada a Cuchillo" data-precio="750" data-tipo="empanada">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanada Carne" class="pizza-img">
                 <div class="pizza-info">
-                    <div class="pizza-nombre">Docena Empanadas de Carne</div>
-                    <div class="pizza-desc">Carne cortada a cuchillo, fritas o al horno, jugosas y bien norteñas.</div>
+                    <div class="pizza-nombre">Empanada: Carne Cortada a Cuchillo</div>
+                    <div class="pizza-desc">Carne seleccionada, cebollita de verdeo, huevo y comino. Bien jugosa. (Precio por unidad)</div>
                     <div class="pizza-control">
-                        <div class="pizza-precio">$9.000</div>
+                        <div class="pizza-precio">$750</div>
                         <div class="contador">
                             <button class="btn-cant" onclick="restar(this)">-</button>
                             <div class="cantidad-num">0</div>
@@ -411,6 +414,55 @@
                 </div>
             </div>
 
+            <div class="pizza-card" data-categoria="empanadas" data-nombre="Empanada de Jamón y Queso" data-precio="750" data-tipo="empanada">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanada JyQ" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Empanada: Jamón y Queso</div>
+                    <div class="pizza-desc">Mucho queso muzzarella derretido y jamón cocido premium en cubos. (Precio por unidad)</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$750</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="empanadas" data-nombre="Empanada de Humita Dulce" data-precio="750" data-tipo="empanada">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanada Humita" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Empanada: Humita Dulce</div>
+                    <div class="pizza-desc">Choclo tierno, salsa blanca cremosa y condimentos norteños. (Precio por unidad)</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$750</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pizza-card" data-categoria="empanadas" data-nombre="Empanada de Pollo al Verdeo" data-precio="750" data-tipo="empanada">
+                <img src="https://images.unsplash.com/photo-1628102476618-d73df4ca0935?w=500" alt="Empanada Pollo" class="pizza-img">
+                <div class="pizza-info">
+                    <div class="pizza-nombre">Empanada: Pollo al Verdeo</div>
+                    <div class="pizza-desc">Pechuga de pollo desmenuzada, salteada con verdeo y crema de leche. (Precio por unidad)</div>
+                    <div class="pizza-control">
+                        <div class="pizza-precio">$750</div>
+                        <div class="contador">
+                            <button class="btn-cant" onclick="restar(this)">-</button>
+                            <div class="cantidad-num">0</div>
+                            <button class="btn-cant" onclick="sumar(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BEBIDAS -->
             <div class="pizza-card" data-categoria="bebidas" data-nombre="Gaseosa 1.5L" data-precio="2500">
                 <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500" alt="Gaseosa" class="pizza-img">
                 <div class="pizza-info">
@@ -451,7 +503,6 @@
                     <input type="text" id="cliente-nombre" placeholder="Ej: Juan Pérez" required>
                 </div>
 
-                <!-- NUEVA CASILLA: MÉTODO DE ENTREGA -->
                 <div class="form-group">
                     <label for="cliente-entrega">Método de Entrega *</label>
                     <select id="cliente-entrega" onchange="alternarEntrega()" required>
@@ -515,10 +566,11 @@
             const card = btn.closest('.pizza-card');
             const nombre = card.getAttribute('data-nombre');
             const precio = parseInt(card.getAttribute('data-precio'));
+            const tipo = card.getAttribute('data-tipo') || "general"; // Identificar si es empanada
             const cantElemento = card.querySelector('.cantidad-num');
             
             if (!carrito[nombre]) {
-                carrito[nombre] = { precio: precio, cantidad: 0 };
+                carrito[nombre] = { precio: precio, cantidad: 0, tipo: tipo };
             }
             
             carrito[nombre].cantidad++;
@@ -707,9 +759,36 @@
             mensaje += detallesPagoMensaje + `\n`;
             mensaje += `🛒 *Detalle del Pedido:*\n`;
 
+            // Separar productos comunes y empanadas
+            let empanadasDetalle = "";
+            let productosComunesDetalle = "";
+            let totalEmpanadas = 0;
+            let subtotalEmpanadas = 0;
+
             for (const nombre in carrito) {
-                let subtotal = carrito[nombre].precio * carrito[nombre].cantidad;
-                mensaje += `• ${carrito[nombre].cantidad}x ${nombre} ($${subtotal.toLocaleString('es-AR')})\n`;
+                const item = carrito[nombre];
+                const subtotal = item.precio * item.cantidad;
+
+                if (item.tipo === "empanada") {
+                    totalEmpanadas += item.cantidad;
+                    subtotalEmpanadas += subtotal;
+                    // Limpiar el nombre para que quede más prolijo en el mensaje
+                    const gustoLimpio = nombre.replace("Empanada: ", "").replace("Empanada de ", "");
+                    empanadasDetalle += `  • ${item.cantidad}x ${gustoLimpio}\n`;
+                } else {
+                    productosComunesDetalle += `• ${item.cantidad}x ${nombre} ($${subtotal.toLocaleString('es-AR')})\n`;
+                }
+            }
+
+            // Inyectar productos comunes al mensaje si existen
+            if (productosComunesDetalle !== "") {
+                mensaje += productosComunesDetalle;
+            }
+
+            // Inyectar empanadas agrupadas de forma súper prolija
+            if (totalEmpanadas > 0) {
+                mensaje += `🥟 *Empanadas:* (${totalEmpanadas} unidades - Subtotal: $${subtotalEmpanadas.toLocaleString('es-AR')})\n`;
+                mensaje += empanadasDetalle;
             }
 
             if (metodoPago === "Efectivo") {
